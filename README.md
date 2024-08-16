@@ -18,7 +18,7 @@
 2. [Instalación](#instalación)
 3. [Estructura](#estructura-del-proyecto)
 4. [Endpoint](#endpoints)
-5. [Conclusion](#conclusion)
+5. [Conclusiones](#conclusiones)
 
 ## Introducción
 Este proyecto es la entrega final del curso "Programación Backend I: Desarrollo Avanzado de Backend" de la plataforma Coderhouse. El objetivo del proyecto es desarrollar una aplicación backend utilizando Node.js y varias librerías populares.
@@ -40,7 +40,7 @@ Para instalar Node.js, sigue estos pasos:
    npm -v
 
 ### Instalación de Librerías
-Una vez que Node.js esté instalado, puedes instalar las librerías necesarias para este proyecto. Ejecuta el siguiente comando en la raíz del proyecto:
+1. Una vez que Node.js esté instalado, puedes instalar las librerías necesarias para este proyecto. Ejecuta el siguiente comando en la raíz del proyecto:
     ```sh
     npm install express express-handlebars mongoose mongoose-paginate-v2 express-validation
 
@@ -53,7 +53,7 @@ Una vez que Node.js esté instalado, puedes instalar las librerías necesarias p
 6. **data/**: Contiene los archivos de datos.
 7. **public/**: Contiene los script que se ejecutaran en la vistas.
 
-La estructura del proyecto es la siguiente:
+- La estructura del proyecto es la siguiente:
     ```
     BackEnd01_EF/
     ├── node_modules/
@@ -98,7 +98,7 @@ Estos son los endpoint principales que proporcionan una interfaz al usuario
 - **GET /carts/:cid** : Vista general del carrito en especifico con sus respectivos productos
 
 ### STATUS / JSON
-Estos son los endpoints de gestión encargados de las actualizaciones de las entidades y su respuesta se estandariza con el siguiente formato:
+- Estos son los endpoints de gestión encargados de las actualizaciones de las entidades y su respuesta se estandariza con el siguiente formato:
     ```sh
     { result : "success/error", payload : [], errors : null }
 1. Estatus de petición correcta
