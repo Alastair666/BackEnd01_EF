@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import mongoosePaginate from 'mongoose-paginate-v2';
 
 // Definiendo Colección de Carritos
 const cartsSchema = mongoose.Schema({
@@ -21,8 +20,6 @@ const cartsSchema = mongoose.Schema({
     }
 })
 
-// Añadiendo Plugin de paginación
-cartsSchema.plugin(mongoosePaginate)
 // Exportando modelo de carritos
 const productsModel = mongoose.model("carts", cartsSchema)
 export default productsModel

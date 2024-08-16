@@ -1,31 +1,24 @@
-// Recuperando usuario almacenado
-async function getUser() {
-    return JSON.parse(localStorage.getItem("userEF")) ?? []
-}
-// Recuperando usuario almacenado
-async function getUserCart() {
-    return JSON.parse(localStorage.getItem("cartUser")) ?? []
-}
 // Recuperando Carrito de Usuario desde BD
-async function getUserCartBD(user) {
-    let msj = '', retorno = true, value = {}
+async function getUserCartBD() {
+    let msj = '', retorno = false, value = {}
     try {
-        const response = await fetch(`/api/carts/${user._id}`,{
+        let user = await getUser()
+        // Configurando Petición
+        const cart = await fetch(`/api/carts/${user._id}`,{
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         })
-        //Validando Respuesta
-        const jsonRes = await response.json()
-        if (response.ok){
-            if (jsonRes.result === "success"){
-                value = jsonRes.payload
-            }
-            else {
-                msj = `Get User-Cart Errors: ${jsonRes.errors}`
-                retorno = false
-            }
+        console.log(cart)
+        const jsonRes = await cart.json()
+        if (cart.ok){
+            value = jsonRes.payload
+            retorno = true
+        }
+        else {
+            msj = `Create Cart: ${jsonRes.errors}`
+            throw new Error(`HTTP error! status: ${cart.status}`)
         }
     }
     catch (error){
@@ -33,51 +26,74 @@ async function getUserCartBD(user) {
         msj = `Create User-Cart Errors: ${error}`
         retorno = false
     }
-    
-    if (retorno)
-        return { result: "success", payload: value }
-    else
-        return { result: "error", errors: msj }
+    finally {
+        if (retorno)
+            return { result: "success", payload: value }
+        else
+            return { result: "error", errors: msj }
+    }
+}
+// Creando Carrito de Usuario desde BD
+async function createUserCartBD(){
+    let msj = '', retorno = false, value = {}
+    let user = await getUser()
+    try {
+        const createCart = await fetch(`/api/carts`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user: user._id })
+        })
+        //Validando Respuesta
+        const jsonCreate = await createCart.json()
+        if (createCart.ok){
+            if (jsonCreate.result === "success"){
+                retorno = true
+                value = jsonCreate.payload
+            }
+            else {
+                msj = `Create User-Cart Errors: ${jsonCreate.errors}`
+                throw new Error(`HTTP error! status: ${createCart.status}`)
+            }
+        }
+        else {
+            msj = `Create User-Cart Errors: ${jsonCreate.errors}`
+            throw new Error(`HTTP error! status: ${createCart.status}`)
+        }
+    }
+    catch (error){
+        console.error(`Create User-Cart Errors: ${error}`)
+    }
+    finally {
+        if (retorno)
+            return { result: "success", payload: value }
+        else
+            return { result: "error", errors: msj }
+    }
 }
 
 // Gestionando Carrito por Usuario
 async function manageCart() {
-    const user = await getUser()
-    if (!user || user.length == 0)
-        location.href = "/"
-    else {
-        try {
-            const cart = await getUserCartBD(user)
-            if (cart.result === "success"){
+    try {
+        const cart = await getUserCartBD()
+        if (cart.result === "success"){
+            localStorage.removeItem("cartUser")
+            localStorage.setItem("cartUser", JSON.stringify(cart.payload))
+        }
+        else {
+            const newCart = await createUserCartBD()
+            if (newCart.result === "success") {
+                console.log(`New Cart: `, newCart.payload)
                 localStorage.removeItem("cartUser")
-                localStorage.setItem("cartUser", JSON.stringify(cart.payload))
+                localStorage.setItem("cartUser", JSON.stringify(newCart.payload))
             }
-            else {
-                const createCart = await fetch(`/api/carts`,{
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ user: user._id })
-                })
-                //Validando Respuesta
-                const jsonCreate = await createCart.json()
-                if (createCart.ok){
-                    if (jsonCreate.result === "success"){
-                        await manageCart()
-                    }
-                    else
-                        console.error(`Create User-Cart Errors: ${jsonCreate.errors}`)
-                }
-                else {
-                    console.error(`Create User-Cart Errors: ${jsonCreate.errors}`)
-                    alert(`Create User-Cart Errors`)
-                }
-            }
+            else
+                console.warn(newCart.errors)
         }
-        catch (error) {
-            console.error(`Manage User-Cart Errors: ${error}`)
-        }
+    }
+    catch (error) {
+        console.error(`Manage User-Cart Errors: ${error}`)
     }
 }
 manageCart()
@@ -98,18 +114,55 @@ if (botonesAgregar) {
                 try {
                     const idProd = btn.id
                     if (idProd != null){
-                        //Definiendo opciones
-                        const opciones = {
-                            method: "PUT"
-                        };
-                        //Consumiendo EndPoint
-                        const response = await fetch(`/api/carts/${cart._id}/product${idProd}`, opciones)
-                        const jsonRes = await response.json()
-                        if (response.ok){
-                            if (jsonRes.result === "success"){
-                                await manageCart()
+                        let quantity = 0
+                        await
+                        Swal.fire({
+                            title : "Add Product",
+                            input : "number",
+                            text : "Quantity",
+                            inputValidator : (value)=>{
+                                return !value && "You need specify a quantity for your product"
+                            },
+                            allowOutsideClick : false
+                        }).then(result =>{
+                            quantity = result.value
+                        })
+
+                        if (quantity > 0){
+                            //Definiendo opciones
+                            const options = {
+                                method: "PUT",
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ quantity: quantity })
+                            };
+                            //Consumiendo EndPoint
+                            const response = await fetch(`/api/carts/${cart._id}/product/${idProd}`, options)
+                            const jsonRes = await response.json()
+                            console.log(jsonRes)
+                            if (response.ok){
+                                if (jsonRes.result === "success"){
+                                    await manageCart()
+                                    await Swal.fire({
+                                        title: "Good job!",
+                                        text: "You have added a product to your cart",
+                                        icon: "success"
+                                    });
+                                }
+                                else {
+                                    await Swal.fire({
+                                        title: "This isn't ok",
+                                        text: jsonRes.errors,
+                                        icon: "error"
+                                    });
+                                }
                             }
+                            else
+                                throw new Error(`HTTP error! status: ${response.status}`)
                         }
+                        else
+                            alert(`The Quantity ${quantity} is invalid`)
                     }
                 }
                 catch (error) {
@@ -119,3 +172,19 @@ if (botonesAgregar) {
         })
     }
 }
+
+// Creando evento de Inicio de Sesión
+document.getElementById("btnLogOut").addEventListener("click", (event)=>{
+    localStorage.clear()
+    location.href = '/'
+})
+
+// Creando evento de Visualización del Cart
+document.getElementById("btnSeeCart").addEventListener("click", async(event)=>{
+    const cart = await getUserCart()
+    if (cart){
+        location.href = `/carts/${cart._id}`
+    }
+    else
+        alert(`The User doesn't have a cart`)
+})

@@ -1,3 +1,9 @@
+// Configura Variables del Cliente
+function homePage(){
+    localStorage.clear()
+}
+homePage()
+
 // Creando evento de Inicio de Sesión
 document.getElementById("btnSignIn").addEventListener("click", async (event)=>{
     await

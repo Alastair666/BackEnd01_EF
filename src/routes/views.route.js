@@ -1,9 +1,10 @@
 import express from "express"
 import productsModel from "../models/product.model.js"
+import cartsModel from "../models/cart.model.js"
 
 const router = express.Router()
 
-// Ruta que no debería estar acá
+// Ruta Inicial de Indexación de la Página de inicio
 router.get("/", (req,res)=>{
     res.render('index')
 })
@@ -66,20 +67,55 @@ router.get("/products", async (req,res)=>{
         res.render('products', retorno)
     }
     catch (error) {
-        res.status(400).json({ status: "error", payload: null, errors: error })
+        res.status(500).json({ status: "error", payload: null, errors: error })
     }
     
 })
 
-
-/** Carts **/
-router.get("/carts", (req,res)=>{
-    res.render('index')
-})
-
-
 /*********************** CARTS ***********************/
-
+router.get("/carts/:cid", async(req,res)=>{
+    try {
+        let retorno
+        const cid = req.params.cid
+        if (cid){
+            let result = await cartsModel.find({ _id: cid }).populate("products.product")
+            if (result){
+                let productos_vista = []
+                result.forEach(ps=>{
+                    ps.products.forEach(p=>{
+                        const newProduct = {
+                            _id: p.product._id,
+                            title: p.product.title,
+                            code: p.product.code,
+                            price: p.product.price,
+                            quantity: p.quantity
+                        }
+                        productos_vista.push(newProduct)
+                    })
+                })
+                retorno = {
+                    status: "success",
+                    payload: productos_vista
+                }
+            }
+            else {
+                retorno = {
+                    status: "error",
+                    payload: products
+                }
+            }
+        }
+        else {
+            res.status(400).json({ status: "error", errors: `There's no cid param in the request` })
+        }
+        //res.status(200).json(retorno)
+        res.render('carts', retorno)
+    }
+    catch (error) {
+        res.status(500).json({ status: "error", payload: null, errors: error })
+        console.log(error)
+    }
+})
 
 // Exportando 
 export default router

@@ -50,7 +50,7 @@ router.post("/",
         }
 })
 /** PUT 
- * Deberá de crear el Carrito único por ID de Usuario
+ * Deberá de actualizar el Carrito único por ID de Usuario
  * **/
 router.put("/:cid",
     [
@@ -63,7 +63,7 @@ router.put("/:cid",
             if (!errores.isEmpty()) {
                 return res.status(400).json({ result: "error", errors: errores.array() });
             }
-            const productsCart = req.body
+            const productsCart = req.body.products
             // Actualizando carito en BD
             const cart = await cartsModel.findOne({ _id: cart_cid })
             if (cart){
@@ -104,6 +104,15 @@ router.put("/:cid/product/:pid",
                     await cart.save()
                     res.send({ result: "success", payload: cart})
                 }
+                else if (prod_idx == -1) {
+                    const newProd = {
+                        product : prod_pid,
+                        quantity : quantity
+                    }
+                    cart.products.push(newProd)
+                    await cart.save()
+                    res.send({ result: "success", payload: cart})
+                }
                 else {
                     return res.status(400).json({ result: "error", errors: "Cannot get the product index" });
                 }
@@ -113,6 +122,7 @@ router.put("/:cid/product/:pid",
             }
         }
         catch (error) {
+            console.log(error)
             return res.status(500).json({ result: "error", errors: error });
         }
 })
