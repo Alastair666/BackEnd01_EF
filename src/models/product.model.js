@@ -3,7 +3,7 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 
 // Definiendo Colección de Productos
 const productsSchema = mongoose.Schema({
-    pid: {type: Number, required: true },
+    //pid: {type: Number, required: true },
     title: {type: String, required: true, max: 50},
     description: {type: String, required: true, max: 150},
     code: {type: String, required: true, max: 100},
